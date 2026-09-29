@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Record Fund Receipt - ANAA{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold text-blue-900 mb-4">Record Fund Receipt</h1>
+<form method="post" class="bg-white border border-slate-200 rounded-lg p-6 max-w-lg space-y-4">
+    {% csrf_token %}
+    {% for field in form %}
+    <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<p class="text-red-600 text-xs mt-1">{{ field.errors|striptags }}</p>{% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded text-sm">Save Receipt</button>
+</form>
+<a href="{% url 'funds:receipt_list' %}" class="inline-block mt-4 text-sm text-blue-700 underline">&larr; Back to fund receipts</a>
+{% endblock %}

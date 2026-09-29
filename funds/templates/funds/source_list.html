@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Fund Sources - ANAA{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+    <div>
+        <h1 class="text-2xl font-bold text-blue-900">Fund Sources</h1>
+        <p class="text-slate-500 text-sm">Total received across all sources:
+            <span class="font-semibold text-green-700">NPR {{ total_all_sources }}</span>
+        </p>
+    </div>
+    {% if request.user.profile.is_treasurer_admin %}
+    <a href="{% url 'funds:source_create' %}" class="bg-blue-900 hover:bg-blue-800 text-white text-sm px-4 py-2 rounded">
+        + Add Fund Source
+    </a>
+    {% endif %}
+</div>
+
+<div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+    <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600 text-left">
+            <tr>
+                <th class="px-4 py-2">Name</th>
+                <th class="px-4 py-2">Type</th>
+                <th class="px-4 py-2 text-right">Total Received</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for source in sources %}
+            <tr class="border-t border-slate-100">
+                <td class="px-4 py-2 font-medium">{{ source.name }}</td>
+                <td class="px-4 py-2 text-slate-500">{{ source.get_source_type_display }}</td>
+                <td class="px-4 py-2 text-right">NPR {{ source.total_received }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="px-4 py-6 text-center text-slate-400">No fund sources yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<a href="{% url 'dashboard' %}" class="inline-block mt-4 text-sm text-blue-700 underline">&larr; Back to dashboard</a>
+{% endblock %}
