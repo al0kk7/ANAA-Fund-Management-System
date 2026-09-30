@@ -6,5 +6,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('funds/', include('funds.urls')),
+    path('budgets/', include('budgets.urls')),
     path('', RedirectView.as_view(pattern_name='login', permanent=False)),
 ]

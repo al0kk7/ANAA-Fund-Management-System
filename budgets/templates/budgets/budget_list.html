@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Budgets - ANAA{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold text-blue-900">Budgets</h1>
+    {% if request.user.profile.is_treasurer_admin %}
+    <a href="{% url 'budgets:budget_create' %}" class="bg-blue-900 hover:bg-blue-800 text-white text-sm px-4 py-2 rounded">+ Add Budget</a>
+    {% endif %}
+</div>
+<div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+    <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600 text-left">
+            <tr>
+                <th class="px-4 py-2">Event</th>
+                <th class="px-4 py-2 text-right">Total Budget</th>
+                <th class="px-4 py-2 text-right">Allocated</th>
+                <th class="px-4 py-2 text-right">Remaining</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in budgets %}
+            <tr class="border-t border-slate-100">
+                <td class="px-4 py-2 font-medium">{{ b.event.name }}</td>
+                <td class="px-4 py-2 text-right">NPR {{ b.total_amount }}</td>
+                <td class="px-4 py-2 text-right text-slate-500">NPR {{ b.total_allocated }}</td>
+                <td class="px-4 py-2 text-right font-medium {% if b.remaining_balance <= 0 %}text-red-600{% else %}text-green-700{% endif %}">
+                    NPR {{ b.remaining_balance }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400">No budgets yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<a href="{% url 'dashboard' %}" class="inline-block mt-4 text-sm text-blue-700 underline">&larr; Back to dashboard</a>
+{% endblock %}

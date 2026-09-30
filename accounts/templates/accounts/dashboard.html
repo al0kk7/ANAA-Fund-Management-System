@@ -25,7 +25,11 @@
     <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
         <h2 class="font-semibold text-blue-900">Budgets & Allocations</h2>
         <p class="text-sm text-slate-500 mt-1">Create budgets and allocate funds to events.</p>
-        <span class="inline-block mt-3 text-xs text-slate-400">Module coming in Iteration 3</span>
+        <div class="mt-3 flex gap-3 text-xs flex-wrap">
+            <a href="{% url 'budgets:event_list' %}" class="text-blue-700 underline">Events</a>
+            <a href="{% url 'budgets:budget_list' %}" class="text-blue-700 underline">Budgets</a>
+            <a href="{% url 'budgets:allocation_list' %}" class="text-blue-700 underline">Allocations</a>
+        </div>
     </div>
     <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
         <h2 class="font-semibold text-blue-900">Verify Requests</h2>

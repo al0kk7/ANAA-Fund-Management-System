@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Allocations - ANAA{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold text-blue-900">Allocations</h1>
+    {% if request.user.profile.is_treasurer_admin %}
+    <a href="{% url 'budgets:allocation_create' %}" class="bg-blue-900 hover:bg-blue-800 text-white text-sm px-4 py-2 rounded">+ Add Allocation</a>
+    {% endif %}
+</div>
+<div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+    <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600 text-left">
+            <tr><th class="px-4 py-2">Event</th><th class="px-4 py-2">Purpose</th><th class="px-4 py-2 text-right">Amount</th></tr>
+        </thead>
+        <tbody>
+            {% for a in allocations %}
+            <tr class="border-t border-slate-100">
+                <td class="px-4 py-2">{{ a.budget.event.name }}</td>
+                <td class="px-4 py-2 font-medium">{{ a.purpose }}</td>
+                <td class="px-4 py-2 text-right">NPR {{ a.allocated_amount }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="px-4 py-6 text-center text-slate-400">No allocations yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<a href="{% url 'dashboard' %}" class="inline-block mt-4 text-sm text-blue-700 underline">&larr; Back to dashboard</a>
+{% endblock %}

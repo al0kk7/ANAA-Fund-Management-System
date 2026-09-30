@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'funds',
+    'budgets',
 ]
 
 LOGIN_URL = 'login'
