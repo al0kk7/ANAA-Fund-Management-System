@@ -68,6 +68,20 @@ class Allocation(models.Model):
     def __str__(self):
         return f"{self.purpose} - {self.allocated_amount}"
 
+    def total_approved_or_paid(self, exclude_request=None):
+        """
+        Sum of expense requests against this allocation that are
+        already Approved or Paid -- i.e. money that is committed,
+        not just requested. Used by ExpenseRequest.transition_to()
+        to check a new approval doesn't overspend the allocation.
+        Excludes exclude_request itself so re-checking an existing
+        request being approved doesn't double count it.
+        """
+        qs = self.expense_requests.filter(status__in=["approved", "paid"])
+        if exclude_request is not None and exclude_request.pk:
+            qs = qs.exclude(pk=exclude_request.pk)
+        return qs.aggregate(total=models.Sum("amount"))["total"] or Decimal("0.00")
+
     def clean(self):
         """
         The balance-validation algorithm:

@@ -7,5 +7,6 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('funds/', include('funds.urls')),
     path('budgets/', include('budgets.urls')),
+    path('requests/', include('requests_app.urls')),
     path('', RedirectView.as_view(pattern_name='login', permanent=False)),
 ]

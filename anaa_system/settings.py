@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'accounts',
     'funds',
     'budgets',
+    'requests_app',
 ]
 
 LOGIN_URL = 'login'
