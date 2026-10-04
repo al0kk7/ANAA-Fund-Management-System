@@ -6,7 +6,28 @@
 <p class="text-slate-500 mb-6">
     Welcome, {{ user.get_full_name|default:user.username }}.
 </p>
-
+{% if profile %}
+<div class="grid gap-3 sm:grid-cols-3 mb-6">
+    <div class="bg-white border border-slate-200 rounded-lg p-4">
+        <p class="text-xs text-slate-500 uppercase tracking-wide">Total Funds Received</p>
+        <p class="text-xl font-bold text-blue-900 mt-1">NPR {{ summary.total_received }}</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-lg p-4">
+        <p class="text-xs text-slate-500 uppercase tracking-wide">Allocated to Events</p>
+        <p class="text-xl font-bold text-slate-800 mt-1">NPR {{ summary.total_allocated }}</p>
+        {% if summary.unallocated < 0 %}
+        <p class="text-xs text-red-600 mt-0.5 font-medium">Over-allocated by NPR {{ summary.unallocated_abs }} (exceeds funds received)</p>
+        {% else %}
+        <p class="text-xs text-slate-400 mt-0.5">NPR {{ summary.unallocated }} not yet allocated</p>
+        {% endif %}
+    </div>
+    <div class="bg-white border border-slate-200 rounded-lg p-4">
+        <p class="text-xs text-slate-500 uppercase tracking-wide">Spent (Paid Out)</p>
+        <p class="text-xl font-bold text-green-700 mt-1">NPR {{ summary.total_paid }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">NPR {{ summary.uncommitted }} allocated but not yet committed</p>
+    </div>
+</div>
+{% endif %}
 {% if not profile %}
 <div class="bg-yellow-50 border border-yellow-300 text-yellow-800 rounded p-4">
     No role has been assigned to your account yet. Contact the Treasurer/Admin.
@@ -41,6 +62,11 @@
         <p class="text-sm text-slate-500 mt-1">Add committee members and assign roles.</p>
         <a href="/admin/" class="inline-block mt-3 text-xs text-blue-700 underline">Open Admin</a>
     </div>
+    <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+        <h2 class="font-semibold text-blue-900">Audit Trail</h2>
+        <p class="text-sm text-slate-500 mt-1">View the full history of financial actions.</p>
+        <a href="{% url 'audit_app:audit_list' %}" class="inline-block mt-3 text-xs text-blue-700 underline">View Audit Trail</a>
+    </div>
 </div>
 
 {% elif profile.is_committee_approver %}
@@ -53,7 +79,7 @@
     <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
         <h2 class="font-semibold text-blue-900">Audit Trail</h2>
         <p class="text-sm text-slate-500 mt-1">View the full history of financial actions.</p>
-        <span class="inline-block mt-3 text-xs text-slate-400">Module coming in Iteration 5</span>
+        <a href="{% url 'audit_app:audit_list' %}" class="inline-block mt-3 text-xs text-blue-700 underline">View Audit Trail</a>
     </div>
 </div>
 
@@ -68,6 +94,11 @@
         <h2 class="font-semibold text-blue-900">My Requests</h2>
         <p class="text-sm text-slate-500 mt-1">Track the status of requests you've submitted.</p>
         <a href="{% url 'requests_app:request_list' %}" class="inline-block mt-3 text-xs text-blue-700 underline">View Requests</a>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+        <h2 class="font-semibold text-blue-900">Audit Trail</h2>
+        <p class="text-sm text-slate-500 mt-1">View the full history of financial actions (read-only).</p>
+        <a href="{% url 'audit_app:audit_list' %}" class="inline-block mt-3 text-xs text-blue-700 underline">View Audit Trail</a>
     </div>
 </div>
 {% endif %}

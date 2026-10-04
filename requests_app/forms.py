@@ -6,6 +6,12 @@ INPUT = "w-full border border-slate-300 rounded px-3 py-2"
 
 
 class ExpenseRequestForm(forms.ModelForm):
+    supporting_document = forms.FileField(
+        required=False,
+        label="Receipt / Bill (optional)",
+        widget=forms.ClearableFileInput(attrs={"class": INPUT}),
+    )
+
     class Meta:
         model = ExpenseRequest
         fields = ["allocation", "amount", "purpose", "description"]
@@ -28,4 +34,12 @@ class RejectionForm(forms.Form):
         widget=forms.Textarea(attrs={"class": INPUT, "rows": 2, "placeholder": "Reason for rejection"}),
         required=True,
         label="Rejection reason",
+    )
+
+
+class PaymentForm(forms.Form):
+    payment_proof = forms.FileField(
+        required=False,
+        label="Payment proof (optional)",
+        widget=forms.ClearableFileInput(attrs={"class": INPUT}),
     )

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Audit Trail - ANAA{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold text-blue-900 mb-4">Audit Trail</h1>
+<div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+    <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600 text-left">
+            <tr>
+                <th class="px-4 py-2">When</th>
+                <th class="px-4 py-2">User</th>
+                <th class="px-4 py-2">Action</th>
+                <th class="px-4 py-2">Target</th>
+                <th class="px-4 py-2">Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr class="border-t border-slate-100">
+                <td class="px-4 py-2 text-slate-500 whitespace-nowrap">{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+                <td class="px-4 py-2">{{ log.user.username|default:"system" }}</td>
+                <td class="px-4 py-2 font-medium">{{ log.action }}</td>
+                <td class="px-4 py-2 text-slate-500">{{ log.target_type }} #{{ log.target_id }}</td>
+                <td class="px-4 py-2 text-slate-500">{{ log.description }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">No audit entries yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<a href="{% url 'dashboard' %}" class="inline-block mt-4 text-sm text-blue-700 underline">&larr; Back to dashboard</a>
+{% endblock %}

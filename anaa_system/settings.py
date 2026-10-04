@@ -41,7 +41,12 @@ INSTALLED_APPS = [
     'funds',
     'budgets',
     'requests_app',
+    'audit_app',
 ]
+
+# Needed for Document file uploads (receipts, payment proof)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
