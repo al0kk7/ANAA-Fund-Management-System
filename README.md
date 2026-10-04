@@ -52,6 +52,8 @@ Allocation, Approval, Audit & Transparency System, covering
 |--------------|---------------|------------------------|
 | treasurer1   | testpass123   | Treasurer / Admin      |
 | admin        | adminpass123  | Member/Requester + Django superuser (use /admin/ to change role) |
+| committee1   | testpass123   | Approve the requested Event Buget|
+| member1      | testpass123   | Request Budget with Estimated Budget|
 
 To create more test users with specific roles quickly, use the Django
 shell:
