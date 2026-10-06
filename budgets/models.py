@@ -10,14 +10,40 @@ class Event(models.Model):
     Something ANAA is raising/spending money for -- e.g. "2026 Annual
     Reunion", "Scholarship Program 2026". A Budget is created against
     one Event.
+
+    is_closed marks an event as finished and reported on -- the
+    "Settled"/"Audited" end of the project workflow diagram. A closed
+    event is a historical record: its budgets/allocations/requests
+    remain visible but the event is flagged done for reporting.
     """
     name = models.CharField(max_length=150)
     description = models.TextField(blank=True)
     event_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    is_closed = models.BooleanField(default=False)
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="events_closed"
+    )
+    closed_at = models.DateTimeField(null=True, blank=True)
+    closure_notes = models.TextField(blank=True)
+
     def __str__(self):
         return self.name
+
+    def total_budgeted(self):
+        return self.budgets.aggregate(total=models.Sum("total_amount"))["total"] or Decimal("0.00")
+
+    def total_spent(self):
+        from requests_app.models import ExpenseRequest
+        return ExpenseRequest.objects.filter(
+            allocation__budget__event=self,
+            status=ExpenseRequest.STATUS_PAID,
+        ).aggregate(total=models.Sum("amount"))["total"] or Decimal("0.00")
+
+    def total_leftover(self):
+        return self.total_budgeted() - self.total_spent()
 
 
 class Budget(models.Model):
@@ -25,6 +51,14 @@ class Budget(models.Model):
     The total amount approved for an Event. Allocations are then
     carved out of this budget -- the sum of allocations must never
     exceed total_amount (enforced in Allocation.clean()).
+
+    Budget itself is checked against actual Fund Receipts in
+    clean() below: a Budget cannot commit more money than ANAA has
+    actually received and not yet committed to another Budget. This
+    is the same balance-validation pattern as Allocation.clean() and
+    ExpenseRequest.transition_to(), applied one level higher --
+    Fund Receipts -> Budgets -> Allocations -> Expense Requests each
+    check against the level above them.
     """
     event = models.ForeignKey(Event, on_delete=models.PROTECT, related_name="budgets")
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -44,6 +78,44 @@ class Budget(models.Model):
 
     def remaining_balance(self):
         return self.total_amount - self.total_allocated()
+
+    def clean(self):
+        """
+        Balance-validation algorithm, applied at the Fund -> Budget
+        level: this budget's total_amount must not push the sum of
+        all Budgets beyond total Fund Receipts actually recorded.
+        """
+        if self.total_amount is None:
+            return
+
+        # Imported here, not at module level, to avoid a circular
+        # import (funds app has no dependency on budgets, so this is
+        # safe either way, but keeping it local matches the deferred-
+        # import style already used for cross-app totals elsewhere,
+        # e.g. accounts/views.py).
+        from funds.models import FundReceipt
+
+        total_received = FundReceipt.objects.aggregate(
+            total=models.Sum("amount")
+        )["total"] or Decimal("0.00")
+
+        existing_budgeted = Budget.objects.exclude(pk=self.pk).aggregate(
+            total=models.Sum("total_amount")
+        )["total"] or Decimal("0.00")
+
+        prospective_total = existing_budgeted + self.total_amount
+
+        if prospective_total > total_received:
+            remaining = total_received - existing_budgeted
+            raise ValidationError(
+                f"This budget of {self.total_amount} exceeds the unallocated "
+                f"funds on hand of {remaining} (total received: {total_received}, "
+                f"already budgeted: {existing_budgeted})."
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class Allocation(models.Model):

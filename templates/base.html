@@ -8,21 +8,52 @@
 </head>
 <body class="bg-slate-50 min-h-screen">
     {% if user.is_authenticated %}
-    <nav class="bg-blue-900 text-white px-6 py-3 flex items-center justify-between">
-        <span class="font-semibold">ANAA Fund Management System</span>
-        <div class="flex items-center gap-4 text-sm">
-            <span>{{ user.get_full_name|default:user.username }}
-                {% if user.profile %}<span class="text-blue-200">({{ user.profile.get_role_display }})</span>{% endif %}
-            </span>
-            <a href="{% url 'logout' %}" class="bg-blue-700 hover:bg-blue-600 px-3 py-1 rounded">Logout</a>
+    <header class="bg-blue-900 text-white">
+        <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+            <a href="{% url 'dashboard' %}" class="font-semibold tracking-tight flex items-center gap-2">
+                <span class="w-7 h-7 rounded bg-white/15 flex items-center justify-center text-xs font-bold">A</span>
+                ANAA Fund Management
+            </a>
+            <div class="flex items-center gap-3 text-sm">
+                {% if user.profile %}
+                <span class="hidden sm:inline-block text-xs bg-white/10 px-2.5 py-1 rounded-full text-blue-100">
+                    {{ user.profile.get_role_display }}
+                </span>
+                {% endif %}
+                <span>{{ user.get_full_name|default:user.username }}</span>
+                <a href="{% url 'logout' %}" class="bg-blue-700 hover:bg-blue-600 transition-colors px-3 py-1.5 rounded text-xs font-medium">
+                    Logout
+                </a>
+            </div>
         </div>
-    </nav>
+
+        {% if user.profile %}
+        <nav class="bg-blue-950/40 border-t border-blue-800/50">
+            <div class="max-w-6xl mx-auto px-6 flex items-center gap-1 text-sm overflow-x-auto">
+                <a href="{% url 'dashboard' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Dashboard</a>
+                <a href="{% url 'funds:source_list' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Fund Sources</a>
+                <a href="{% url 'funds:receipt_list' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Fund Receipts</a>
+                <a href="{% url 'budgets:event_list' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Events</a>
+                <a href="{% url 'budgets:budget_list' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Budgets</a>
+                <a href="{% url 'budgets:allocation_list' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Allocations</a>
+                <a href="{% url 'requests_app:request_list' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Requests</a>
+                <a href="{% url 'audit_app:audit_list' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Audit Trail</a>
+                {% if user.profile.is_treasurer_admin %}
+                <a href="/admin/" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Admin</a>
+                {% endif %}
+            </div>
+        </nav>
+        {% endif %}
+    </header>
     {% endif %}
 
-    <main class="max-w-4xl mx-auto p-6">
+    <main class="max-w-6xl mx-auto p-6">
         {% if messages %}
             {% for message in messages %}
-            <div class="mb-4 px-4 py-2 rounded bg-red-100 text-red-800 border border-red-300 text-sm">
+            <div class="mb-4 px-4 py-2.5 rounded-lg border text-sm flex items-start gap-2
+                {% if message.tags == 'success' %}bg-green-50 text-green-800 border-green-300
+                {% elif message.tags == 'error' %}bg-red-50 text-red-800 border-red-300
+                {% else %}bg-blue-50 text-blue-800 border-blue-300{% endif %}">
                 {{ message }}
             </div>
             {% endfor %}

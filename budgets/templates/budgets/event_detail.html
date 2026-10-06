@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}{{ event.name }} - ANAA{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-1">
+    <h1 class="text-2xl font-bold text-blue-900">{{ event.name }}</h1>
+    {% if event.is_closed %}
+    <span class="text-xs px-3 py-1 rounded-full bg-slate-700 text-white font-medium">CLOSED</span>
+    {% else %}
+    <span class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-800 font-medium">OPEN</span>
+    {% endif %}
+</div>
+<p class="text-slate-500 mb-6">{{ event.event_date|default:"No date set" }} &middot; {{ event.description|default:"" }}</p>
+
+<div class="grid gap-3 sm:grid-cols-3 mb-6">
+    <div class="bg-white border border-slate-200 rounded-lg p-4">
+        <p class="text-xs text-slate-500 uppercase tracking-wide">Total Budgeted</p>
+        <p class="text-xl font-bold text-blue-900 mt-1">NPR {{ event.total_budgeted }}</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-lg p-4">
+        <p class="text-xs text-slate-500 uppercase tracking-wide">Total Spent (Paid)</p>
+        <p class="text-xl font-bold text-green-700 mt-1">NPR {{ event.total_spent }}</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-lg p-4">
+        <p class="text-xs text-slate-500 uppercase tracking-wide">Leftover</p>
+        <p class="text-xl font-bold {% if event.total_leftover < 0 %}text-red-600{% else %}text-slate-800{% endif %} mt-1">
+            NPR {{ event.total_leftover }}
+        </p>
+    </div>
+</div>
+
+{% if event.is_closed %}
+<div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
+    <p class="text-sm text-slate-600">
+        <strong>Closed</strong> by {{ event.closed_by.username }} on {{ event.closed_at|date:"Y-m-d H:i" }}
+    </p>
+    {% if event.closure_notes %}<p class="text-sm text-slate-600 mt-1">Notes: {{ event.closure_notes }}</p>{% endif %}
+</div>
+{% elif request.user.profile.is_treasurer_admin %}
+<div class="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+    <form method="post" action="{% url 'budgets:event_close' event.pk %}">
+        {% csrf_token %}
+        <label class="block text-sm font-medium text-slate-700 mb-1">Close this event (final report)</label>
+        <textarea name="closure_notes" rows="2" placeholder="Optional closing notes for the record"
+                  class="w-full border border-slate-300 rounded px-3 py-2 text-sm mb-2"></textarea>
+        <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-white text-sm px-4 py-2 rounded">
+            Close Event
+        </button>
+        <p class="text-xs text-slate-400 mt-1">Only possible once every expense request below is Paid or Rejected.</p>
+    </form>
+</div>
+{% endif %}
+
+<h2 class="text-lg font-semibold text-blue-900 mb-2">Budgets</h2>
+<div class="bg-white border border-slate-200 rounded-lg overflow-hidden mb-6">
+    <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600 text-left">
+            <tr><th class="px-4 py-2">Total</th><th class="px-4 py-2">Allocated</th><th class="px-4 py-2">Notes</th></tr>
+        </thead>
+        <tbody>
+            {% for b in budgets %}
+            <tr class="border-t border-slate-100">
+                <td class="px-4 py-2">NPR {{ b.total_amount }}</td>
+                <td class="px-4 py-2">NPR {{ b.total_allocated }}</td>
+                <td class="px-4 py-2 text-slate-500">{{ b.notes|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="px-4 py-4 text-center text-slate-400">No budgets yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h2 class="text-lg font-semibold text-blue-900 mb-2">Expense Requests &amp; Bills</h2>
+<div class="space-y-3 mb-6">
+    {% for r in expense_requests %}
+    <div class="bg-white border border-slate-200 rounded-lg p-4">
+        <div class="flex items-start justify-between">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold text-slate-800">{{ r.purpose }}</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full
+                        {% if r.status == 'paid' %}bg-purple-100 text-purple-800
+                        {% elif r.status == 'approved' %}bg-green-100 text-green-800
+                        {% elif r.status == 'rejected' %}bg-red-100 text-red-800
+                        {% else %}bg-slate-200 text-slate-700{% endif %}">
+                        {{ r.get_status_display }}
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">{{ r.allocation.purpose }} &middot; requested by {{ r.requested_by.username }}</p>
+                {% if r.documents.all %}
+                <div class="mt-2 flex flex-wrap gap-2">
+                    {% for doc in r.documents.all %}
+                    <a href="{{ doc.file.url }}" target="_blank" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">
+                        {{ doc.get_document_type_display }}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="font-semibold text-slate-800">NPR {{ r.amount }}</div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="bg-white border border-slate-200 rounded-lg p-6 text-center text-slate-400">No expense requests under this event yet.</div>
+    {% endfor %}
+</div>
+
+<a href="{% url 'budgets:event_list' %}" class="inline-block text-sm text-blue-700 underline">&larr; Back to events</a>
+{% endblock %}

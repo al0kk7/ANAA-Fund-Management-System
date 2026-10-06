@@ -10,6 +10,7 @@ class FundSource(models.Model):
     """
 
     TYPE_MEMBERSHIP_FEE = "membership_fee"
+    TYPE_EMBASSY_FUNDING = "embassy_funding"
     TYPE_DONATION = "donation"
     TYPE_EVENT_TICKET = "event_ticket"
     TYPE_SPONSORSHIP = "sponsorship"
@@ -17,6 +18,7 @@ class FundSource(models.Model):
 
     SOURCE_TYPE_CHOICES = [
         (TYPE_MEMBERSHIP_FEE, "Membership Fee"),
+        (TYPE_EMBASSY_FUNDING, "Embassy Funding"),
         (TYPE_DONATION, "Donation"),
         (TYPE_EVENT_TICKET, "Event Ticket Sales"),
         (TYPE_SPONSORSHIP, "Sponsorship"),

@@ -14,10 +14,13 @@
         </thead>
         <tbody>
             {% for e in events %}
-            <tr class="border-t border-slate-100">
-                <td class="px-4 py-2 font-medium">{{ e.name }}</td>
+            <tr class="border-t border-slate-100 hover:bg-slate-50 cursor-pointer" data-url="{% url 'budgets:event_detail' e.pk %}" onclick="window.location = this.dataset.url">
+                <td class="px-4 py-2 font-medium text-blue-700 underline">{{ e.name }}</td>
                 <td class="px-4 py-2 text-slate-500">{{ e.event_date|default:"-" }}</td>
-                <td class="px-4 py-2 text-slate-500">{{ e.description|default:"-"|truncatechars:60 }}</td>
+                <td class="px-4 py-2 text-slate-500">
+                    {{ e.description|default:"-"|truncatechars:60 }}
+                    {% if e.is_closed %}<span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-700 text-white">CLOSED</span>{% endif %}
+                </td>
             </tr>
             {% empty %}
             <tr><td colspan="3" class="px-4 py-6 text-center text-slate-400">No events yet.</td></tr>

@@ -47,5 +47,6 @@ class AllocationForm(forms.ModelForm):
     # self.instance.full_clean() automatically during is_valid() (via
     # _post_clean()), which runs Allocation.clean() -- the balance
     # validation -- and attaches any ValidationError to
-    # form.non_field_errors() on its own. A manual call here would
-    # run that same validation a second time and double every error.
+    # form.non_field_errors() on its own. Adding a manual call here
+    # previously caused the same error to be validated and displayed
+    # twice.
