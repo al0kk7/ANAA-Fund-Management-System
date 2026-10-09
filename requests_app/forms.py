@@ -43,3 +43,28 @@ class PaymentForm(forms.Form):
         label="Payment proof (optional)",
         widget=forms.ClearableFileInput(attrs={"class": INPUT}),
     )
+
+
+class AddDocumentForm(forms.Form):
+    """
+    For attaching a document to an ExpenseRequest after it has
+    already been submitted -- separate from ExpenseRequestForm
+    (initial submission) and PaymentForm (payment proof at the pay
+    step), since this one can be used by the Member at any time.
+    """
+    file = forms.FileField(
+        required=True,
+        widget=forms.ClearableFileInput(attrs={"class": "text-xs"}),
+    )
+    document_type = forms.ChoiceField(
+        choices=[
+            ("receipt", "Receipt / Bill"),
+            ("payment_proof", "Payment Proof"),
+            ("other", "Other"),
+        ],
+        widget=forms.Select(attrs={"class": "text-xs border border-slate-300 rounded"}),
+    )
+    description = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={"class": "text-xs border border-slate-300 rounded px-1", "placeholder": "Note (optional)"}),
+    )

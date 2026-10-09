@@ -95,6 +95,27 @@
             </form>
         </div>
         {% endif %}
+
+        {# --- Owner (Member who submitted) or Treasurer/Admin: attach a document any time --- #}
+        {% if request.user.id == r.requested_by_id or request.user.profile.is_treasurer_admin %}
+        <div class="mt-3 pt-3 border-t border-slate-100">
+            <form method="post" action="{% url 'requests_app:document_add' r.pk %}" enctype="multipart/form-data"
+                  class="flex flex-wrap items-center gap-2">
+                {% csrf_token %}
+                <input type="file" name="file" required class="text-xs">
+                <select name="document_type" class="text-xs border border-slate-300 rounded px-1 py-1">
+                    <option value="receipt">Receipt / Bill</option>
+                    <option value="payment_proof">Payment Proof</option>
+                    <option value="other">Other</option>
+                </select>
+                <input type="text" name="description" placeholder="Note (optional)"
+                       class="text-xs border border-slate-300 rounded px-2 py-1">
+                <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-1.5 rounded">
+                    + Add Document
+                </button>
+            </form>
+        </div>
+        {% endif %}
     </div>
     {% empty %}
     <div class="bg-white border border-slate-200 rounded-lg p-6 text-center text-slate-400">
