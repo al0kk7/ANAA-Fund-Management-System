@@ -50,7 +50,7 @@ class AddDocumentForm(forms.Form):
     For attaching a document to an ExpenseRequest after it has
     already been submitted -- separate from ExpenseRequestForm
     (initial submission) and PaymentForm (payment proof at the pay
-    step), since this one can be used by the Member at any time.
+    step), since this one can be used by the Secretary at any time.
     """
     file = forms.FileField(
         required=True,

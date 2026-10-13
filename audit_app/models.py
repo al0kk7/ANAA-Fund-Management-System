@@ -5,7 +5,7 @@ from django.db import models
 class Document(models.Model):
     """
     A supporting file attached to an ExpenseRequest -- either a
-    receipt/bill the Member attaches when submitting, or proof of
+    receipt/bill the Secretary attaches when submitting, or proof of
     payment the Treasurer attaches when marking a request Paid.
 
     Kept as a direct ForeignKey (not a GenericForeignKey) since the

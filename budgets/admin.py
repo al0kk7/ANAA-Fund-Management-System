@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Event, Budget, Allocation
+from .models import Event, Budget, Allocation, EventExpense
 
 
 @admin.register(Event)
@@ -16,3 +16,10 @@ class BudgetAdmin(admin.ModelAdmin):
 class AllocationAdmin(admin.ModelAdmin):
     list_display = ("purpose", "budget", "allocated_amount", "created_by")
     list_filter = ("budget",)
+
+
+@admin.register(EventExpense)
+class EventExpenseAdmin(admin.ModelAdmin):
+    list_display = ("description", "event", "amount", "expense_date", "added_by")
+    list_filter = ("event",)
+    date_hierarchy = "expense_date"

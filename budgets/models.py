@@ -45,6 +45,63 @@ class Event(models.Model):
     def total_leftover(self):
         return self.total_budgeted() - self.total_spent()
 
+    def total_actual_expenses(self):
+        """Sum of the real bills recorded after the event (EventExpense)."""
+        return self.actual_expenses.aggregate(total=models.Sum("amount"))["total"] or Decimal("0.00")
+
+    def budget_variance(self):
+        """
+        Budgeted minus actual. Positive = came in under budget,
+        negative = went over budget.
+        """
+        return self.total_budgeted() - self.total_actual_expenses()
+
+    def expenses_missing_bills(self):
+        """How many recorded expenses have no scanned bill attached yet."""
+        return self.actual_expenses.filter(bill_file="").count()
+
+
+class EventExpense(models.Model):
+    """
+    A real, after-the-fact expense for an Event -- one line per bill.
+
+    Why this is separate from ExpenseRequest: an ExpenseRequest is the
+    ESTIMATE stage (someone asks for money before the event, goes
+    through verify/approve/pay). An EventExpense is the ACTUAL stage
+    (after the event, someone records what was really spent, with the
+    bill). The two will rarely match exactly, and the gap between
+    them is exactly what the yearly audit is meant to show.
+
+    Since the original bills are physical paper, bill_file holds a
+    scan/photo, and physical_reference records WHERE the paper
+    original is kept (e.g. "Blue folder, page 12") so an auditor can
+    find it.
+    """
+    event = models.ForeignKey(Event, on_delete=models.PROTECT, related_name="actual_expenses")
+    description = models.CharField(max_length=200)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    expense_date = models.DateField()
+    paid_to = models.CharField(max_length=150, blank=True, help_text="Vendor / shop / person paid")
+    bill_file = models.FileField(upload_to="expense_bills/%Y/%m/", blank=True)
+    physical_reference = models.CharField(
+        max_length=150, blank=True,
+        help_text="Where the paper bill is filed, e.g. 'Blue folder, page 12'"
+    )
+    added_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="event_expenses_added"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["expense_date", "created_at"]
+
+    def __str__(self):
+        return f"{self.description} - {self.amount} ({self.event.name})"
+
+    def clean(self):
+        if self.amount is not None and self.amount <= 0:
+            raise ValidationError("Amount must be greater than zero.")
+
 
 class Budget(models.Model):
     """

@@ -6,6 +6,7 @@
 <p class="text-slate-500 mb-6">
     Welcome, {{ user.get_full_name|default:user.username }}.
 </p>
+
 {% if profile %}
 <div class="grid gap-3 sm:grid-cols-3 mb-6">
     <div class="bg-white border border-slate-200 rounded-lg p-4">
@@ -28,6 +29,7 @@
     </div>
 </div>
 {% endif %}
+
 {% if not profile %}
 <div class="bg-yellow-50 border border-yellow-300 text-yellow-800 rounded p-4">
     No role has been assigned to your account yet. Contact the Treasurer/Admin.
@@ -83,7 +85,7 @@
     </div>
 </div>
 
-{% elif profile.is_member_requester %}
+{% elif profile.is_secretary %}
 <div class="grid gap-4 sm:grid-cols-2">
     <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
         <h2 class="font-semibold text-blue-900">Submit Expense Request</h2>
@@ -94,6 +96,16 @@
         <h2 class="font-semibold text-blue-900">My Requests</h2>
         <p class="text-sm text-slate-500 mt-1">Track the status of requests you've submitted.</p>
         <a href="{% url 'requests_app:request_list' %}" class="inline-block mt-3 text-xs text-blue-700 underline">View Requests</a>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+        <h2 class="font-semibold text-blue-900">Record Event Expenses</h2>
+        <p class="text-sm text-slate-500 mt-1">After an event, open it and record what was actually spent &mdash; amount, description and the scanned bill.</p>
+        <a href="{% url 'budgets:event_list' %}" class="inline-block mt-3 text-xs text-blue-700 underline">Open Events</a>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+        <h2 class="font-semibold text-blue-900">Yearly Audit</h2>
+        <p class="text-sm text-slate-500 mt-1">All events in a date range with their budgeted and actual expenses.</p>
+        <a href="{% url 'budgets:annual_audit' %}" class="inline-block mt-3 text-xs text-blue-700 underline">Open Yearly Audit</a>
     </div>
     <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
         <h2 class="font-semibold text-blue-900">Audit Trail</h2>

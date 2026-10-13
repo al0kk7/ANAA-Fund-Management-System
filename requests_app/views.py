@@ -26,7 +26,7 @@ def request_list(request):
     return render(request, "requests_app/request_list.html", {"requests": requests_qs})
 
 
-@role_required(Profile.ROLE_MEMBER_REQUESTER)
+@role_required(Profile.ROLE_SECRETARY)
 def request_create(request):
     if request.method == "POST":
         form = ExpenseRequestForm(request.POST, request.FILES)
@@ -147,11 +147,11 @@ def request_pay(request, pk):
 @login_required
 def document_add(request, pk):
     """
-    Lets the Member who submitted a request attach additional bills/
+    Lets the Secretary who submitted a request attach additional bills/
     documents AFTER submission (not just at the initial form) -- e.g.
     a final bill that only arrived after the event. Treasurer/Admin
     can also attach documents to any request, for cases where the
-    Treasurer is the one filing paperwork on a Member's behalf.
+    Treasurer is the one filing paperwork on the Secretary's behalf.
 
     Deliberately allowed regardless of the request's current status
     (even Paid/Rejected requests can still receive late-arriving

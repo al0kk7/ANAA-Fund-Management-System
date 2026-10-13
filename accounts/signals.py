@@ -4,7 +4,7 @@ freshly created user (including one made via `createsuperuser` or
 the Django admin) always has a role to check against instead of
 crashing on a missing OneToOne relation.
 
-Default role is Member/Requester -- a Treasurer/Admin should
+Default role is Secretary -- a Treasurer/Admin should
 explicitly upgrade a user's role via the admin panel after creation.
 """
 

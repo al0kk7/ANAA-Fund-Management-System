@@ -1,8 +1,9 @@
 """
 Wipes all financial/project data (Fund Sources, Fund Receipts,
-Events, Budgets, Allocations, Expense Requests, Documents, Audit
-Logs) WITHOUT touching Users or Profiles -- so your team's logins
-(treasurer1, committee1, member1, admin, etc.) survive a reset.
+Events, Budgets, Allocations, Expense Requests, Actual Event
+Expenses, Documents, Audit Logs) WITHOUT touching Users or Profiles
+-- so your team's logins (treasurer1, committee1, secretary, admin,
+etc.) survive a reset.
 
 Usage:
     python manage.py reset_financial_data
@@ -10,14 +11,19 @@ Usage:
 
 Deletion order matters: children are deleted before parents, since
 most foreign keys here use on_delete=PROTECT (by design -- see the
-models). Deleting a Budget before its Allocations, for example,
+models). Deleting an Event before its EventExpenses, for example,
 would raise a ProtectedError.
+
+The whole reset runs inside one database transaction, so if anything
+fails part-way, NOTHING is deleted -- you never end up with a
+half-wiped database.
 """
 
 import shutil
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 
 class Command(BaseCommand):
@@ -32,13 +38,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from audit_app.models import Document, AuditLog
         from requests_app.models import ExpenseRequest
-        from budgets.models import Allocation, Budget, Event
+        from budgets.models import Allocation, Budget, Event, EventExpense
         from funds.models import FundReceipt, FundSource
 
         if not options["yes"]:
             confirm = input(
                 "This will permanently delete ALL fund sources, receipts, events, "
-                "budgets, allocations, expense requests, documents, and audit logs.\n"
+                "budgets, allocations, expense requests, actual event expenses, "
+                "documents, and audit logs.\n"
                 "User accounts and roles will NOT be touched.\n"
                 "Type 'yes' to continue: "
             )
@@ -46,44 +53,32 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING("Cancelled. Nothing was deleted."))
                 return
 
-        # Delete in dependency order: leaves first, roots last.
-        doc_count = Document.objects.count()
-        Document.objects.all().delete()
+        # Leaves first, roots last. Order here is the dependency order.
+        steps = [
+            ("Documents", Document),
+            ("Audit log entries", AuditLog),
+            ("Expense requests", ExpenseRequest),
+            ("Actual event expenses", EventExpense),
+            ("Allocations", Allocation),
+            ("Budgets", Budget),
+            ("Events", Event),
+            ("Fund receipts", FundReceipt),
+            ("Fund sources", FundSource),
+        ]
 
-        audit_count = AuditLog.objects.count()
-        AuditLog.objects.all().delete()
+        counts = {}
+        with transaction.atomic():
+            for label, model in steps:
+                counts[label] = model.objects.count()
+                model.objects.all().delete()
 
-        req_count = ExpenseRequest.objects.count()
-        ExpenseRequest.objects.all().delete()
-
-        alloc_count = Allocation.objects.count()
-        Allocation.objects.all().delete()
-
-        budget_count = Budget.objects.count()
-        Budget.objects.all().delete()
-
-        event_count = Event.objects.count()
-        Event.objects.all().delete()
-
-        receipt_count = FundReceipt.objects.count()
-        FundReceipt.objects.all().delete()
-
-        source_count = FundSource.objects.count()
-        FundSource.objects.all().delete()
-
-        # Also clear uploaded files from media/documents/, since the
-        # Document rows pointing to them are now gone.
-        media_docs_path = settings.MEDIA_ROOT / "documents"
-        if media_docs_path.exists():
-            shutil.rmtree(media_docs_path)
+        # Only touch uploaded files AFTER the database part succeeded.
+        for folder in ("documents", "expense_bills"):
+            path = settings.MEDIA_ROOT / folder
+            if path.exists():
+                shutil.rmtree(path)
 
         self.stdout.write(self.style.SUCCESS("Financial/project data cleared:"))
-        self.stdout.write(f"  Documents:        {doc_count}")
-        self.stdout.write(f"  Audit log entries: {audit_count}")
-        self.stdout.write(f"  Expense requests:  {req_count}")
-        self.stdout.write(f"  Allocations:       {alloc_count}")
-        self.stdout.write(f"  Budgets:           {budget_count}")
-        self.stdout.write(f"  Events:            {event_count}")
-        self.stdout.write(f"  Fund receipts:     {receipt_count}")
-        self.stdout.write(f"  Fund sources:      {source_count}")
+        for label, _ in steps:
+            self.stdout.write(f"  {label + ':':<24}{counts[label]}")
         self.stdout.write(self.style.SUCCESS("User accounts and roles were NOT touched."))

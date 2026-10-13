@@ -14,7 +14,7 @@
         </thead>
         <tbody>
             {% for e in events %}
-            <tr class="border-t border-slate-100 hover:bg-slate-50 cursor-pointer" data-url="{% url 'budgets:event_detail' e.pk %}" onclick="window.location = this.dataset.url">
+            <tr class="border-t border-slate-100 hover:bg-slate-50 cursor-pointer" onclick="window.location='{% url 'budgets:event_detail' e.pk %}'">
                 <td class="px-4 py-2 font-medium text-blue-700 underline">{{ e.name }}</td>
                 <td class="px-4 py-2 text-slate-500">{{ e.event_date|default:"-" }}</td>
                 <td class="px-4 py-2 text-slate-500">

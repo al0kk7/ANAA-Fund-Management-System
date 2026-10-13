@@ -11,20 +11,31 @@
 </div>
 <p class="text-slate-500 mb-6">{{ event.event_date|default:"No date set" }} &middot; {{ event.description|default:"" }}</p>
 
-<div class="grid gap-3 sm:grid-cols-3 mb-6">
+<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
     <div class="bg-white border border-slate-200 rounded-lg p-4">
         <p class="text-xs text-slate-500 uppercase tracking-wide">Total Budgeted</p>
         <p class="text-xl font-bold text-blue-900 mt-1">NPR {{ event.total_budgeted }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">The plan / estimate</p>
     </div>
     <div class="bg-white border border-slate-200 rounded-lg p-4">
-        <p class="text-xs text-slate-500 uppercase tracking-wide">Total Spent (Paid)</p>
-        <p class="text-xl font-bold text-green-700 mt-1">NPR {{ event.total_spent }}</p>
+        <p class="text-xs text-slate-500 uppercase tracking-wide">Paid Out (Requests)</p>
+        <p class="text-xl font-bold text-purple-700 mt-1">NPR {{ event.total_spent }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">Money released via approved requests</p>
     </div>
     <div class="bg-white border border-slate-200 rounded-lg p-4">
-        <p class="text-xs text-slate-500 uppercase tracking-wide">Leftover</p>
-        <p class="text-xl font-bold {% if event.total_leftover < 0 %}text-red-600{% else %}text-slate-800{% endif %} mt-1">
-            NPR {{ event.total_leftover }}
-        </p>
+        <p class="text-xs text-slate-500 uppercase tracking-wide">Actual Expenses (Bills)</p>
+        <p class="text-xl font-bold text-green-700 mt-1">NPR {{ event.total_actual_expenses }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">What was really spent</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-lg p-4">
+        <p class="text-xs text-slate-500 uppercase tracking-wide">Budget vs Actual</p>
+        {% if event.budget_variance < 0 %}
+        <p class="text-xl font-bold text-red-600 mt-1">NPR {{ event.budget_variance }}</p>
+        <p class="text-xs text-red-600 mt-0.5 font-medium">Over budget</p>
+        {% else %}
+        <p class="text-xl font-bold text-slate-800 mt-1">NPR {{ event.budget_variance }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">Remaining under budget</p>
+        {% endif %}
     </div>
 </div>
 
@@ -45,11 +56,104 @@
         <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-white text-sm px-4 py-2 rounded">
             Close Event
         </button>
-        <p class="text-xs text-slate-400 mt-1">Only possible once every expense request below is Paid or Rejected.</p>
+        <p class="text-xs text-slate-400 mt-1">
+            Only possible once every expense request is Paid or Rejected. Closing locks the actual expenses below &mdash;
+            record all bills first.
+        </p>
     </form>
 </div>
 {% endif %}
 
+{# ============ ACTUAL EXPENSES (after the event) ============ #}
+<h2 class="text-lg font-semibold text-blue-900 mb-1">Actual Expenses &amp; Bills</h2>
+<p class="text-sm text-slate-500 mb-3">
+    What was really spent on this event, recorded after it took place. Scan or photograph each paper bill and note where the original is filed.
+</p>
+
+{% if event.expenses_missing_bills %}
+<div class="mb-3 px-4 py-2.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 text-sm">
+    {{ event.expenses_missing_bills }} expense{{ event.expenses_missing_bills|pluralize }} below {{ event.expenses_missing_bills|pluralize:"has,have" }} no scanned bill attached yet.
+</div>
+{% endif %}
+
+<div class="bg-white border border-slate-200 rounded-lg overflow-x-auto mb-4">
+    <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600 text-left">
+            <tr>
+                <th class="px-4 py-2">Date</th>
+                <th class="px-4 py-2">Description</th>
+                <th class="px-4 py-2">Paid to</th>
+                <th class="px-4 py-2 text-right">Amount</th>
+                <th class="px-4 py-2">Bill</th>
+                <th class="px-4 py-2">Paper copy kept at</th>
+                <th class="px-4 py-2">Added by</th>
+                <th class="px-4 py-2"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for x in actual_expenses %}
+            <tr class="border-t border-slate-100">
+                <td class="px-4 py-2 whitespace-nowrap">{{ x.expense_date }}</td>
+                <td class="px-4 py-2 font-medium">{{ x.description }}</td>
+                <td class="px-4 py-2 text-slate-500">{{ x.paid_to|default:"-" }}</td>
+                <td class="px-4 py-2 text-right font-medium whitespace-nowrap">NPR {{ x.amount }}</td>
+                <td class="px-4 py-2">
+                    {% if x.bill_file %}
+                    <a href="{{ x.bill_file.url }}" target="_blank" class="text-xs bg-green-50 text-green-800 border border-green-200 px-2 py-1 rounded hover:bg-green-100">View bill</a>
+                    {% else %}
+                    <span class="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-2 py-1 rounded">No bill</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-2 text-slate-500">{{ x.physical_reference|default:"-" }}</td>
+                <td class="px-4 py-2 text-slate-500">{{ x.added_by.username }}</td>
+                <td class="px-4 py-2 text-right">
+                    {% if not event.is_closed and x.added_by_id == request.user.id or not event.is_closed and request.user.profile.is_treasurer_admin %}
+                    <form method="post" action="{% url 'budgets:event_expense_delete' x.pk %}"
+                          onsubmit="return confirm('Delete this expense entry?');">
+                        {% csrf_token %}
+                        <button type="submit" class="text-xs text-red-600 hover:underline">Delete</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="px-4 py-6 text-center text-slate-400">No actual expenses recorded yet.</td></tr>
+            {% endfor %}
+        </tbody>
+        {% if actual_expenses %}
+        <tfoot class="bg-slate-50 border-t border-slate-200">
+            <tr>
+                <td colspan="3" class="px-4 py-2 font-semibold text-right">Total actual expenses</td>
+                <td class="px-4 py-2 text-right font-bold whitespace-nowrap">NPR {{ event.total_actual_expenses }}</td>
+                <td colspan="4"></td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+</div>
+
+{% if can_add_expense %}
+<form method="post" action="{% url 'budgets:event_expense_add' event.pk %}" enctype="multipart/form-data"
+      class="bg-white border border-slate-200 rounded-lg p-5 mb-8">
+    {% csrf_token %}
+    <h3 class="font-semibold text-slate-800 mb-3">Add an expense</h3>
+    <div class="grid gap-4 sm:grid-cols-2">
+        {% for field in expense_form %}
+        <div class="{% if field.name == 'description' or field.name == 'bill_file' %}sm:col-span-2{% endif %}">
+            <label class="block text-sm font-medium text-slate-700 mb-1">{{ field.label }}</label>
+            {{ field }}
+        </div>
+        {% endfor %}
+    </div>
+    <button type="submit" class="mt-4 bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded text-sm">Save expense</button>
+</form>
+{% elif event.is_closed %}
+<p class="text-sm text-slate-500 mb-8">This event is closed, so no further expenses can be added.</p>
+{% else %}
+<p class="text-sm text-slate-500 mb-8">Expenses can be added by the Secretary and the Treasurer. Committee members have view-only access here.</p>
+{% endif %}
+
+{# ============ BUDGETS ============ #}
 <h2 class="text-lg font-semibold text-blue-900 mb-2">Budgets</h2>
 <div class="bg-white border border-slate-200 rounded-lg overflow-hidden mb-6">
     <table class="w-full text-sm">
@@ -70,7 +174,9 @@
     </table>
 </div>
 
-<h2 class="text-lg font-semibold text-blue-900 mb-2">Expense Requests &amp; Bills</h2>
+{# ============ EXPENSE REQUESTS (the estimate stage) ============ #}
+<h2 class="text-lg font-semibold text-blue-900 mb-1">Expense Requests</h2>
+<p class="text-sm text-slate-500 mb-3">The pre-event requests that were verified, approved and paid out.</p>
 <div class="space-y-3 mb-6">
     {% for r in expense_requests %}
     <div class="bg-white border border-slate-200 rounded-lg p-4">

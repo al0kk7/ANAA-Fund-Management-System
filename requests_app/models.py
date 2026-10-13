@@ -9,7 +9,7 @@ from budgets.models import Allocation
 
 class ExpenseRequest(models.Model):
     """
-    A Member/Requester's request to spend money from a specific
+    A Secretary's request to spend money from a specific
     Allocation. Moves through a fixed set of states, enforced by
     ALLOWED_TRANSITIONS below -- this is the state-transition
     validation algorithm documented in the project report.

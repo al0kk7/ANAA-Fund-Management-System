@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Event, Budget, Allocation
+from .models import Event, Budget, Allocation, EventExpense
 
 INPUT = "w-full border border-slate-300 rounded px-3 py-2"
 
@@ -50,3 +50,25 @@ class AllocationForm(forms.ModelForm):
     # form.non_field_errors() on its own. Adding a manual call here
     # previously caused the same error to be validated and displayed
     # twice.
+
+
+class EventExpenseForm(forms.ModelForm):
+    """
+    Records one real expense (one bill) against an event, after the
+    fact. The scanned bill is optional at entry time so an expense
+    can be logged immediately and the scan added once available --
+    but the event page flags any expense still missing a bill, so
+    nothing quietly goes undocumented.
+    """
+    class Meta:
+        model = EventExpense
+        fields = ["description", "amount", "expense_date", "paid_to", "physical_reference", "bill_file"]
+        widgets = {
+            "description": forms.TextInput(attrs={"class": INPUT, "placeholder": "e.g. Hall booking, Catering, Banner printing"}),
+            "amount": forms.NumberInput(attrs={"class": INPUT, "step": "0.01"}),
+            "expense_date": forms.DateInput(attrs={"class": INPUT, "type": "date"}),
+            "paid_to": forms.TextInput(attrs={"class": INPUT, "placeholder": "Vendor / shop / person (optional)"}),
+            "physical_reference": forms.TextInput(attrs={"class": INPUT, "placeholder": "Where the paper bill is filed (optional)"}),
+            "bill_file": forms.ClearableFileInput(attrs={"class": INPUT}),
+        }
+        labels = {"bill_file": "Scanned / photographed bill"}

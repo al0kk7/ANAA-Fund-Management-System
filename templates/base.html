@@ -8,7 +8,7 @@
 </head>
 <body class="bg-slate-50 min-h-screen">
     {% if user.is_authenticated %}
-    <header class="bg-blue-900 text-white">
+    <header class="bg-blue-900 text-white print:hidden">
         <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
             <a href="{% url 'dashboard' %}" class="font-semibold tracking-tight flex items-center gap-2">
                 <span class="w-7 h-7 rounded bg-white/15 flex items-center justify-center text-xs font-bold">A</span>
@@ -38,6 +38,7 @@
                 <a href="{% url 'budgets:allocation_list' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Allocations</a>
                 <a href="{% url 'requests_app:request_list' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Requests</a>
                 <a href="{% url 'audit_app:audit_list' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Audit Trail</a>
+                <a href="{% url 'budgets:annual_audit' %}" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Yearly Audit</a>
                 {% if user.profile.is_treasurer_admin %}
                 <a href="/admin/" class="px-3 py-2.5 text-blue-100 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap">Admin</a>
                 {% endif %}
